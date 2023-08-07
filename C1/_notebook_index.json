@@ -1,0 +1,68 @@
+{
+  "course": "C1",
+  "title": "Introduction to TensorFlow for Artificial Intelligence, Machine Learning, and Deep Learning",
+  "weeks": [
+    {
+      "week": "W1",
+      "notebooks": {
+        "assignment": {
+          "file": "W1/assignment/C1W1_Assignment.ipynb",
+          "graded_functions": ["house_model"]
+        },
+        "ungraded_lab": {
+          "file": "W1/ungraded_lab/C1_W1_Lab_1_hello_world_nn.ipynb",
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W2",
+      "notebooks": {
+        "assignment": {
+          "file": "W2/assignment/C1W2_Assignment.ipynb",
+          "graded_functions": ["myCallback", "train_mnist"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W2/ungraded_labs/C1_W2_Lab_1_beyond_hello_world.ipynb",
+            "W2/ungraded_labs/C1_W2_Lab_2_callbacks.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W3",
+      "notebooks": {
+        "assignment": {
+          "file": "W3/assignment/C1W3_Assignment.ipynb",
+          "graded_functions": ["reshape_and_normalize", "myCallback", "convolutional_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W3/ungraded_labs/C1_W3_Lab_1_improving_accuracy_using_convolutions.ipynb",
+            "W3/ungraded_labs/C1_W3_Lab_2_exploring_convolutions.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W4",
+      "notebooks": {
+        "assignment": {
+          "file": "W4/assignment/C1W4_Assignment.ipynb",
+          "graded_functions": ["image_generator", "train_happy_sad_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W4/ungraded_labs/C1_W4_Lab_1_image_generator_no_validation.ipynb",
+            "W4/ungraded_labs/C1_W4_Lab_2_image_generator_with_validation.ipynb",
+            "W4/ungraded_labs/C1_W4_Lab_3_compacted_images.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    }
+  ]
+}
