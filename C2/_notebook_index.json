@@ -1,0 +1,61 @@
+{
+  "course": "C2",
+  "title": "Convolutional Neural Networks in TensorFlow",
+  "weeks": [
+    {
+      "week": "W1",
+      "notebooks": {
+        "assignment": {
+          "file": "W1/assignment/C2W1_Assignment.ipynb",
+          "graded_functions": ["create_train_val_dirs", "split_data", "train_val_generators", "create_model"]
+        },
+        "ungraded_lab": {
+          "file": "W1/ungraded_lab/C2_W1_Lab_1_cats_vs_dogs.ipynb",
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W2",
+      "notebooks": {
+        "assignment": {
+          "file": "W2/assignment/C2W2_Assignment.ipynb",
+          "graded_functions": ["create_train_val_dirs", "split_data", "train_val_generators", "create_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W2/ungraded_labs/C2_W2_Lab_1_cats_v_dogs_augmentation.ipynb",
+            "W2/ungraded_labs/C2_W2_Lab_2_horses_v_humans_augmentation.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W3",
+      "notebooks": {
+        "assignment": {
+          "file": "W3/assignment/C2W3_Assignment.ipynb",
+          "graded_functions": ["train_val_generators", "create_pre_trained_model", "output_of_last_layer", "create_final_model"]
+        },
+        "ungraded_lab": {
+          "file": "W3/ungraded_lab/C2_W3_Lab_1_transfer_learning.ipynb",
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W4",
+      "notebooks": {
+        "assignment": {
+          "file": "W4/assignment/C2W4_Assignment.ipynb",
+          "graded_functions": ["parse_data_from_input", "train_val_generators"]
+        },
+        "ungraded_lab": {
+          "file": "W4/ungraded_lab/C2_W4_Lab_1_multi_class_classifier.ipynb",
+          "graded_functions": []
+        }
+      }
+    }
+  ]
+}
