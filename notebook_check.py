@@ -1,7 +1,13 @@
+import ast
 import json
 import os
 import re
 import sys
+
+
+GRADED_MARKER = re.compile(
+    r"#\s*GRADED\s+(?:FUNCTIONS?|CLASS):\s*([A-Za-z_]\w*)"
+)
 
 
 class NotebookValidationError(ValueError):
@@ -62,6 +68,97 @@ def load_notebook(nb_path):
     return validate_notebook_structure(notebook)
 
 
+def cell_source(cell):
+    source = cell.get("source", "")
+    return source if isinstance(source, str) else "".join(source)
+
+
+def extract_graded_functions_from_notebook(notebook):
+    functions = []
+    for cell in notebook["cells"]:
+        if cell["cell_type"] != "code":
+            continue
+        functions.extend(GRADED_MARKER.findall(cell_source(cell)))
+    return functions
+
+
+def extract_definitions(notebook):
+    definitions = {}
+    for cell_index, cell in enumerate(notebook["cells"]):
+        if cell["cell_type"] != "code":
+            continue
+        try:
+            tree = ast.parse(cell_source(cell))
+        except SyntaxError:
+            continue
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                definitions.setdefault(node.name, []).append((cell_index, node))
+    return definitions
+
+
+def _definition_is_placeholder(node):
+    body = list(node.body)
+    if body and isinstance(body[0], ast.Expr):
+        value = body[0].value
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            body = body[1:]
+    if not body:
+        return True
+    if len(body) != 1:
+        return False
+    statement = body[0]
+    if isinstance(statement, ast.Pass):
+        return True
+    if isinstance(statement, ast.Raise):
+        exception = statement.exc
+        if isinstance(exception, ast.Name):
+            return exception.id == "NotImplementedError"
+        if isinstance(exception, ast.Call) and isinstance(exception.func, ast.Name):
+            return exception.func.id == "NotImplementedError"
+    if isinstance(statement, ast.Return):
+        return statement.value is None or (
+            isinstance(statement.value, ast.Constant) and statement.value.value is None
+        )
+    return False
+
+
+def validate_assignment(nb_path, expected):
+    notebook = load_notebook(nb_path)
+    expected = list(expected)
+    errors = []
+    if len(expected) != len(set(expected)):
+        errors.append("expected function list contains duplicates")
+
+    markers = extract_graded_functions_from_notebook(notebook)
+    definitions = extract_definitions(notebook)
+    missing_definitions = [name for name in expected if name not in definitions]
+    if missing_definitions:
+        errors.append("missing definitions: {}".format(", ".join(missing_definitions)))
+
+    incomplete = []
+    duplicated = []
+    for name in expected:
+        matches = definitions.get(name, [])
+        if len(matches) > 1:
+            duplicated.append(name)
+        if matches and all(_definition_is_placeholder(node) for _, node in matches):
+            incomplete.append(name)
+    if duplicated:
+        errors.append("duplicate definitions: {}".format(", ".join(duplicated)))
+    if incomplete:
+        errors.append("incomplete definitions: {}".format(", ".join(incomplete)))
+
+    if markers:
+        missing_markers = [name for name in expected if name not in markers]
+        unexpected_markers = [name for name in markers if name not in expected]
+        if missing_markers:
+            errors.append("missing graded markers: {}".format(", ".join(missing_markers)))
+        if unexpected_markers:
+            errors.append("unexpected graded markers: {}".format(", ".join(unexpected_markers)))
+    return errors
+
+
 def find_notebooks(root):
     notebooks = []
     for dirpath, _, filenames in os.walk(root):
@@ -73,14 +170,7 @@ def find_notebooks(root):
 
 def extract_graded_functions(nb_path):
     nb = load_notebook(nb_path)
-    functions = []
-    for cell in nb.get("cells", []):
-        if cell.get("cell_type") != "code":
-            continue
-        src = "".join(cell.get("source", []))
-        for m in re.finditer(r"#\s*GRADED\s+(?:FUNCTION|CLASS):\s*(\w+)", src):
-            functions.append(m.group(1))
-    return functions
+    return extract_graded_functions_from_notebook(nb)
 
 
 def main():
