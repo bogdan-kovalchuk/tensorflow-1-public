@@ -97,6 +97,36 @@ def extract_definitions(notebook):
     return definitions
 
 
+def requires_notebook_runtime(source):
+    for line in source.splitlines():
+        if line.lstrip().startswith(("%", "!", "?")):
+            return True
+    return "get_ipython()" in source
+
+
+def validate_code_syntax(notebook):
+    errors = []
+    skipped = []
+    for cell_index, cell in enumerate(notebook["cells"]):
+        if cell["cell_type"] != "code":
+            continue
+        source = cell_source(cell)
+        if not source.strip():
+            continue
+        if requires_notebook_runtime(source):
+            skipped.append(cell_index)
+            continue
+        try:
+            ast.parse(source)
+        except SyntaxError as error:
+            errors.append(
+                "cell {} line {}: {}".format(
+                    cell_index, error.lineno or 0, error.msg
+                )
+            )
+    return errors, skipped
+
+
 def _definition_is_placeholder(node):
     body = list(node.body)
     if body and isinstance(body[0], ast.Expr):
@@ -129,6 +159,9 @@ def validate_assignment(nb_path, expected):
     errors = []
     if len(expected) != len(set(expected)):
         errors.append("expected function list contains duplicates")
+
+    syntax_errors, _ = validate_code_syntax(notebook)
+    errors.extend("syntax error: {}".format(error) for error in syntax_errors)
 
     markers = extract_graded_functions_from_notebook(notebook)
     definitions = extract_definitions(notebook)
@@ -182,10 +215,18 @@ def main():
     for nb_path in notebooks:
         rel = os.path.relpath(nb_path, root)
         try:
-            load_notebook(nb_path)
+            notebook = load_notebook(nb_path)
+            syntax_errors, skipped_cells = validate_code_syntax(notebook)
+            if syntax_errors:
+                raise NotebookValidationError("; ".join(syntax_errors))
             funcs = extract_graded_functions(nb_path)
             total_funcs += len(funcs)
-            tag = f"  graded: {', '.join(funcs)}" if funcs else ""
+            details = []
+            if funcs:
+                details.append("graded: {}".format(", ".join(funcs)))
+            if skipped_cells:
+                details.append("runtime cells skipped: {}".format(len(skipped_cells)))
+            tag = "  " + "; ".join(details) if details else ""
             print(f"OK   {rel}{tag}")
             ok += 1
         except Exception as e:
