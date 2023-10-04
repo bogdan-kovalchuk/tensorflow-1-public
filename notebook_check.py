@@ -1,6 +1,7 @@
 import ast
 import json
 import os
+from pathlib import Path
 import re
 import sys
 
@@ -246,6 +247,94 @@ def validate_assignment(nb_path, expected):
     return errors
 
 
+def _index_notebook_paths(entry, location, errors):
+    has_file = "file" in entry
+    has_files = "files" in entry
+    if has_file == has_files:
+        errors.append("{} must contain exactly one of file or files".format(location))
+        return []
+    paths = [entry["file"]] if has_file else entry["files"]
+    if not isinstance(paths, list) or any(not isinstance(path, str) for path in paths):
+        errors.append("{} notebook paths must be strings".format(location))
+        return []
+    graded = entry.get("graded_functions")
+    if not isinstance(graded, list) or any(not isinstance(name, str) for name in graded):
+        errors.append("{} graded_functions must be a string list".format(location))
+    return paths
+
+
+def validate_course_index(course_root):
+    course_root = Path(course_root)
+    index_path = course_root / "_notebook_index.json"
+    errors = []
+    try:
+        with index_path.open("r", encoding="utf-8") as index_file:
+            index = json.load(index_file)
+    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+        return ["{}: {}".format(index_path, error)]
+    if not isinstance(index, dict):
+        return ["{} must contain an object".format(index_path)]
+    if index.get("course") != course_root.name:
+        errors.append("course must match directory {}".format(course_root.name))
+    if not isinstance(index.get("title"), str) or not index["title"].strip():
+        errors.append("title must be a non-empty string")
+    weeks = index.get("weeks")
+    if not isinstance(weeks, list):
+        return errors + ["weeks must be a list"]
+
+    references = []
+    week_names = []
+    for week_index, week in enumerate(weeks):
+        location = "weeks[{}]".format(week_index)
+        if not isinstance(week, dict):
+            errors.append("{} must be an object".format(location))
+            continue
+        week_name = week.get("week")
+        if not isinstance(week_name, str):
+            errors.append("{}.week must be a string".format(location))
+        else:
+            week_names.append(week_name)
+        notebooks = week.get("notebooks")
+        if not isinstance(notebooks, dict) or "assignment" not in notebooks:
+            errors.append("{}.notebooks must contain an assignment".format(location))
+            continue
+        for kind, entry in notebooks.items():
+            entry_location = "{}.notebooks.{}".format(location, kind)
+            if not isinstance(entry, dict):
+                errors.append("{} must be an object".format(entry_location))
+                continue
+            for relative_path in _index_notebook_paths(entry, entry_location, errors):
+                references.append(relative_path)
+                path = Path(relative_path)
+                if path.is_absolute() or ".." in path.parts:
+                    errors.append("{} escapes the course directory".format(relative_path))
+                    continue
+                if path.suffix.lower() != ".ipynb":
+                    errors.append("{} is not a notebook".format(relative_path))
+                if not (course_root / path).is_file():
+                    errors.append("missing indexed notebook {}".format(relative_path))
+
+    expected_weeks = ["W1", "W2", "W3", "W4"]
+    if week_names != expected_weeks:
+        errors.append(
+            "weeks must be ordered {}, got {}".format(expected_weeks, week_names)
+        )
+    if len(references) != len(set(references)):
+        errors.append("notebook index contains duplicate paths")
+    actual = {
+        path.relative_to(course_root).as_posix()
+        for path in course_root.rglob("*.ipynb")
+    }
+    indexed = {Path(path).as_posix() for path in references}
+    missing_from_index = sorted(actual - indexed)
+    stale_references = sorted(indexed - actual)
+    if missing_from_index:
+        errors.append("unindexed notebooks: {}".format(", ".join(missing_from_index)))
+    if stale_references:
+        errors.append("stale notebook paths: {}".format(", ".join(stale_references)))
+    return errors
+
+
 def find_notebooks(root):
     notebooks = []
     for dirpath, _, filenames in os.walk(root):
@@ -293,6 +382,14 @@ def main():
         except Exception as e:
             print(f"FAIL {rel}  {e}")
             fail += 1
+    for course_name in ("C1", "C2", "C3", "C4"):
+        course_root = os.path.join(root, course_name)
+        index_errors = validate_course_index(course_root)
+        if index_errors:
+            print("FAIL {} index  {}".format(course_name, "; ".join(index_errors)))
+            fail += 1
+        else:
+            print("OK   {} index".format(course_name))
     print(
         "\n{} passed, {} failed, {} graded functions found, "
         "{} outputs inspected across {} executed cells".format(
