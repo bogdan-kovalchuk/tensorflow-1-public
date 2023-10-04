@@ -127,6 +127,57 @@ def validate_code_syntax(notebook):
     return errors, skipped
 
 
+def validate_metadata_hygiene(notebook):
+    errors = []
+    cell_ids = set()
+    for cell_index, cell in enumerate(notebook["cells"]):
+        cell_id = cell.get("id")
+        if cell_id is not None:
+            if not isinstance(cell_id, str) or not cell_id.strip():
+                errors.append("cell {} has an invalid id".format(cell_index))
+            elif cell_id in cell_ids:
+                errors.append("cell {} has duplicate id {}".format(cell_index, cell_id))
+            cell_ids.add(cell_id)
+        tags = cell["metadata"].get("tags")
+        if tags is not None and (
+            not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags)
+        ):
+            errors.append("cell {} metadata tags must be strings".format(cell_index))
+    return errors
+
+
+def validate_output_hygiene(notebook):
+    errors = []
+    output_count = 0
+    executed_cells = 0
+    allowed_output_types = {
+        "display_data", "error", "execute_result", "stream", "update_display_data"
+    }
+    for cell_index, cell in enumerate(notebook["cells"]):
+        if cell["cell_type"] != "code":
+            continue
+        if cell.get("execution_count") is not None:
+            executed_cells += 1
+        for output_index, output in enumerate(cell["outputs"]):
+            output_count += 1
+            location = "cell {} output {}".format(cell_index, output_index)
+            if not isinstance(output, dict):
+                errors.append("{} must be an object".format(location))
+                continue
+            output_type = output.get("output_type")
+            if output_type not in allowed_output_types:
+                errors.append("{} has invalid output_type {}".format(location, output_type))
+            elif output_type == "error":
+                errors.append(
+                    "{} contains saved error {}".format(
+                        location, output.get("ename", "without an exception name")
+                    )
+                )
+            elif output_type == "stream" and output.get("name") not in {"stdout", "stderr"}:
+                errors.append("{} has invalid stream name".format(location))
+    return errors, output_count, executed_cells
+
+
 def _definition_is_placeholder(node):
     body = list(node.body)
     if body and isinstance(body[0], ast.Expr):
@@ -162,6 +213,9 @@ def validate_assignment(nb_path, expected):
 
     syntax_errors, _ = validate_code_syntax(notebook)
     errors.extend("syntax error: {}".format(error) for error in syntax_errors)
+    errors.extend(validate_metadata_hygiene(notebook))
+    output_errors, _, _ = validate_output_hygiene(notebook)
+    errors.extend(output_errors)
 
     markers = extract_graded_functions_from_notebook(notebook)
     definitions = extract_definitions(notebook)
@@ -212,13 +266,20 @@ def main():
     ok = 0
     fail = 0
     total_funcs = 0
+    total_outputs = 0
+    total_executed_cells = 0
     for nb_path in notebooks:
         rel = os.path.relpath(nb_path, root)
         try:
             notebook = load_notebook(nb_path)
             syntax_errors, skipped_cells = validate_code_syntax(notebook)
-            if syntax_errors:
-                raise NotebookValidationError("; ".join(syntax_errors))
+            metadata_errors = validate_metadata_hygiene(notebook)
+            output_errors, output_count, executed_cells = validate_output_hygiene(notebook)
+            validation_errors = syntax_errors + metadata_errors + output_errors
+            if validation_errors:
+                raise NotebookValidationError("; ".join(validation_errors))
+            total_outputs += output_count
+            total_executed_cells += executed_cells
             funcs = extract_graded_functions(nb_path)
             total_funcs += len(funcs)
             details = []
@@ -232,7 +293,12 @@ def main():
         except Exception as e:
             print(f"FAIL {rel}  {e}")
             fail += 1
-    print(f"\n{ok} passed, {fail} failed, {total_funcs} graded functions found")
+    print(
+        "\n{} passed, {} failed, {} graded functions found, "
+        "{} outputs inspected across {} executed cells".format(
+            ok, fail, total_funcs, total_outputs, total_executed_cells
+        )
+    )
     return 1 if fail else 0
 
 
