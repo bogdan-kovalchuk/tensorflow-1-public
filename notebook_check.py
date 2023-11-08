@@ -335,6 +335,51 @@ def validate_course_index(course_root):
     return errors
 
 
+def assignment_expectations(course_root, notebook_path):
+    course_root = Path(course_root)
+    notebook_path = Path(notebook_path)
+    relative_path = notebook_path.relative_to(course_root).as_posix()
+    index_path = course_root / "_notebook_index.json"
+    with index_path.open("r", encoding="utf-8") as index_file:
+        index = json.load(index_file)
+    for week in index.get("weeks", []):
+        assignment = week.get("notebooks", {}).get("assignment", {})
+        if assignment.get("file") == relative_path:
+            return assignment.get("graded_functions", [])
+    raise NotebookValidationError(
+        "assignment is not indexed: {}".format(relative_path)
+    )
+
+
+def assignment_main(script_file):
+    assignment_directory = Path(script_file).resolve().parent
+    notebooks = sorted(assignment_directory.glob("*.ipynb"))
+    if len(notebooks) != 1:
+        print(
+            "FAIL expected one assignment notebook beside checker, found {}".format(
+                len(notebooks)
+            )
+        )
+        return 1
+    notebook_path = notebooks[0]
+    course_root = assignment_directory.parents[1]
+    try:
+        expected = assignment_expectations(course_root, notebook_path)
+        errors = validate_assignment(notebook_path, expected)
+    except (OSError, UnicodeError, json.JSONDecodeError, NotebookValidationError) as error:
+        print("FAIL {}: {}".format(notebook_path.name, error))
+        return 1
+    if errors:
+        print("FAIL {}: {}".format(notebook_path.name, "; ".join(errors)))
+        return 1
+    print(
+        "OK  {} graded definitions validated: {}".format(
+            len(expected), ", ".join(expected) if expected else "none"
+        )
+    )
+    return 0
+
+
 def find_notebooks(root):
     notebooks = []
     for dirpath, _, filenames in os.walk(root):
