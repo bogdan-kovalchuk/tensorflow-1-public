@@ -1,0 +1,72 @@
+{
+  "course": "C4",
+  "title": "Sequences, Time Series and Prediction",
+  "weeks": [
+    {
+      "week": "W1",
+      "notebooks": {
+        "assignment": {
+          "file": "W1/assignment/C4W1_Assignment.ipynb",
+          "graded_functions": ["train_val_split", "compute_metrics", "moving_average_forecast"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W1/ungraded_labs/C4_W1_Lab_1_time_series.ipynb",
+            "W1/ungraded_labs/C4_W1_Lab_2_forecasting.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W2",
+      "notebooks": {
+        "assignment": {
+          "file": "W2/assignment/C4W2_Assignment.ipynb",
+          "graded_functions": ["windowed_dataset", "create_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W2/ungraded_labs/C4_W2_Lab_1_features_and_labels.ipynb",
+            "W2/ungraded_labs/C4_W2_Lab_2_single_layer_NN.ipynb",
+            "W2/ungraded_labs/C4_W2_Lab_3_deep_NN.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W3",
+      "notebooks": {
+        "assignment": {
+          "file": "W3/assignment/C4W3_Assignment.ipynb",
+          "graded_functions": ["create_uncompiled_model", "adjust_learning_rate", "create_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W3/ungraded_labs/C4_W3_Lab_1_RNN.ipynb",
+            "W3/ungraded_labs/C4_W3_Lab_2_LSTM.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W4",
+      "notebooks": {
+        "assignment": {
+          "file": "W4/assignment/C4W4_Assignment.ipynb",
+          "graded_functions": ["parse_data_from_file", "create_uncompiled_model", "adjust_learning_rate", "create_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W4/ungraded_labs/C4_W4_Lab_1_LSTM.ipynb",
+            "W4/ungraded_labs/C4_W4_Lab_2_Sunspots_DNN.ipynb",
+            "W4/ungraded_labs/C4_W4_Lab_3_Sunspots_CNN_RNN_DNN.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    }
+  ]
+}
