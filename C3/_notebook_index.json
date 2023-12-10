@@ -1,0 +1,76 @@
+{
+  "course": "C3",
+  "title": "Natural Language Processing in TensorFlow",
+  "weeks": [
+    {
+      "week": "W1",
+      "notebooks": {
+        "assignment": {
+          "file": "W1/assignment/C3W1_Assignment.ipynb",
+          "graded_functions": ["remove_stopwords", "parse_data_from_file", "fit_tokenizer", "get_padded_sequences", "tokenize_labels"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W1/ungraded_labs/C3_W1_Lab_1_tokenize_basic.ipynb",
+            "W1/ungraded_labs/C3_W1_Lab_2_sequences_basic.ipynb",
+            "W1/ungraded_labs/C3_W1_Lab_3_sarcasm.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W2",
+      "notebooks": {
+        "assignment": {
+          "file": "W2/assignment/C3W2_Assignment.ipynb",
+          "graded_functions": ["train_val_split", "fit_tokenizer", "seq_and_pad", "tokenize_labels", "create_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W2/ungraded_labs/C3_W2_Lab_1_imdb.ipynb",
+            "W2/ungraded_labs/C3_W2_Lab_2_sarcasm_classifier.ipynb",
+            "W2/ungraded_labs/C3_W2_Lab_3_imdb_subwords.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W3",
+      "notebooks": {
+        "assignment": {
+          "file": "W3/assignment/C3W3_Assignment.ipynb",
+          "graded_functions": ["parse_data_from_file", "train_val_split", "fit_tokenizer", "seq_pad_and_trunc", "create_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W3/ungraded_labs/C3_W3_Lab_1_single_layer_LSTM.ipynb",
+            "W3/ungraded_labs/C3_W3_Lab_2_multiple_layer_LSTM.ipynb",
+            "W3/ungraded_labs/C3_W3_Lab_3_Conv1D.ipynb",
+            "W3/ungraded_labs/C3_W3_Lab_4_imdb_reviews_with_GRU_LSTM_Conv1D.ipynb",
+            "W3/ungraded_labs/C3_W3_Lab_5_sarcasm_with_bi_LSTM.ipynb",
+            "W3/ungraded_labs/C3_W3_Lab_6_sarcasm_with_1D_convolutional.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    },
+    {
+      "week": "W4",
+      "notebooks": {
+        "assignment": {
+          "file": "W4/assignment/C3W4_Assignment.ipynb",
+          "graded_functions": ["n_gram_seqs", "pad_seqs", "features_and_labels", "create_model"]
+        },
+        "ungraded_labs": {
+          "files": [
+            "W4/ungraded_labs/C3_W4_Lab_1.ipynb",
+            "W4/ungraded_labs/C3_W4_Lab_2_irish_lyrics.ipynb"
+          ],
+          "graded_functions": []
+        }
+      }
+    }
+  ]
+}
